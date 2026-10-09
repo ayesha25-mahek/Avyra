@@ -2,12 +2,12 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Upload, X, FileText, Film, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { cn, formatFileSize, getFileIcon } from '@/lib/utils';
 
-const ACCEPTED = '.pdf,.docx,.pptx,.txt,.png,.jpg,.jpeg,.webp,.mp4,.mov,.avi';
+const ACCEPTED = '.pdf,.docx,.pptx,.txt,.csv,.png,.jpg,.jpeg,.webp,.mp4,.mov,.avi';
 const MAX_FILES = 10;
 
 function getTypeColor(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase() ?? '';
-  if (['pdf', 'docx', 'pptx', 'txt'].includes(ext)) return 'text-[#00E599]';
+  if (['pdf', 'docx', 'pptx', 'txt', 'csv'].includes(ext)) return 'text-[#00E599]';
   if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) return 'text-[#34D399]';
   if (['mp4', 'mov', 'avi'].includes(ext)) return 'text-[#06B6D4]';
   return 'text-gray-400';
@@ -95,10 +95,10 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({ files, onFilesChange, d
         {/* Formats support pill tags */}
         <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-serif text-[#B8D5C6]">
           <span className="px-2.5 py-0.5 rounded-md bg-[#163827] border border-[#23573E] flex items-center gap-1.5">
-            <FileText className="w-3 h-3 text-[#74C69D]" /> PDF / DOCX / PPTX / TXT
+            <FileText className="w-3 h-3 text-[#74C69D]" /> PDF / DOCX / PPTX / TXT / CSV
           </span>
           <span className="px-2.5 py-0.5 rounded-md bg-[#163827] border border-[#23573E] flex items-center gap-1.5">
-            <ImageIcon className="w-3 h-3 text-[#74C69D]" /> PNG / JPG / WEBP
+            <ImageIcon className="w-3 h-3 text-[#74C69D]" /> PNG / JPG / DWG / P&ID / WEBP
           </span>
           <span className="px-2.5 py-0.5 rounded-md bg-[#163827] border border-[#23573E] flex items-center gap-1.5">
             <Film className="w-3 h-3 text-[#74C69D]" /> MP4 / MOV
@@ -119,7 +119,12 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({ files, onFilesChange, d
               </span>
               <div className="flex-1 min-w-0 font-serif">
                 <p className="text-xs font-semibold text-gray-200 truncate">{file.name}</p>
-                <p className="text-[10px] font-mono text-gray-400">{formatFileSize(file.size)}</p>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <span className="text-[10px] font-mono text-gray-400">{formatFileSize(file.size)}</span>
+                  <span className="px-1.5 py-0.5 rounded bg-[#102B1E] border border-[#1E4D36] text-[9px] font-mono text-[#00E599] font-medium tracking-tight">
+                    🔒 CONFIDENTIAL | PROCESSING: LOCAL | EXTERNAL TRANSFER: NONE
+                  </span>
+                </div>
               </div>
               <button
                 type="button"

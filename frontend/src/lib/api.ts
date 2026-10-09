@@ -148,3 +148,183 @@ export async function fetchOutputTypes(): Promise<string[]> {
     return [];
   }
 }
+
+export interface GeneratedFileInfo {
+  filename: string;
+  relative_path: string;
+  size_bytes: number;
+  modified_at: number;
+  extension: string;
+  download_url: string;
+}
+
+export async function fetchGeneratedFiles(): Promise<GeneratedFileInfo[]> {
+  try {
+    const res = await fetch(`${API_BASE}/generated-files`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.files || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function executeSandbox(params: { code?: string; task?: string; timeout?: number }) {
+  const res = await fetch(`${API_BASE}/sandbox/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || 'Sandbox execution failed');
+  }
+  return await res.json();
+}
+
+export async function retrieveSop(query: string, top_k = 4) {
+  const res = await fetch(`${API_BASE}/rag/retrieve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, top_k }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || 'Failed to retrieve SOPs');
+  }
+  return await res.json();
+}
+
+export async function fetchRagDocuments() {
+  const res = await fetch(`${API_BASE}/rag/documents`);
+  if (!res.ok) return { documents: [] };
+  return await res.json();
+}
+
+export async function ingestSopDocument(formData: FormData) {
+  const res = await fetch(`${API_BASE}/rag/ingest`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || 'SOP Ingestion failed');
+  }
+  return await res.json();
+}
+
+export async function fetchModelRegistry() {
+  try {
+    const res = await fetch(`${API_BASE}/models`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+// ─── Document-to-Engineering-Drawing API ────────────────────────────────────
+export async function extractDrawingRequirements(formData: FormData) {
+  const token = localStorage.getItem('avyara_auth_token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}/drawing/extract-requirements`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to extract drawing requirements' }));
+    throw new Error(err.detail || 'Failed to extract drawing requirements');
+  }
+  return await res.json();
+}
+
+export async function generateCadDrawing(spec: any) {
+  const token = localStorage.getItem('avyara_auth_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}/drawing/generate-cad`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(spec),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'CAD drawing generation failed' }));
+    throw new Error(err.detail || 'CAD drawing generation failed');
+  }
+  return await res.json();
+}
+
+// ─── Document-to-Excel Workbook API ─────────────────────────────────────────
+export async function extractSpreadsheetFromDoc(formData: FormData) {
+  const token = localStorage.getItem('avyara_auth_token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}/spreadsheet/extract-from-doc`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to extract spreadsheet schema' }));
+    throw new Error(err.detail || 'Failed to extract spreadsheet schema');
+  }
+  return await res.json();
+}
+
+export async function generateSpreadsheetWorkbook(schema: any) {
+  const token = localStorage.getItem('avyara_auth_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}/spreadsheet/generate-workbook`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(schema),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Workbook generation failed' }));
+    throw new Error(err.detail || 'Workbook generation failed');
+  }
+  return await res.json();
+}
+
+// ─── Spreadsheet Audit & Safe Data Correction API ────────────────────────────
+export async function auditSpreadsheetData(formData: FormData) {
+  const token = localStorage.getItem('avyara_auth_token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}/spreadsheet/audit-clean`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Spreadsheet audit failed' }));
+    throw new Error(err.detail || 'Spreadsheet audit failed');
+  }
+  return await res.json();
+}
+
+export async function applySpreadsheetCorrections(payload: any) {
+  const token = localStorage.getItem('avyara_auth_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}/spreadsheet/apply-corrections`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to apply spreadsheet corrections' }));
+    throw new Error(err.detail || 'Failed to apply spreadsheet corrections');
+  }
+  return await res.json();
+}
+

@@ -157,3 +157,104 @@ export async function fetchActivityLogs(): Promise<ActivityLog[]> {
     return [];
   }
 }
+
+export async function switchActiveRole(role: string): Promise<UserProfile> {
+  const token = getStoredToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const res = await fetch('/api/auth/switch-role', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ role }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to switch role' }));
+    throw new Error(err.detail || 'Failed to switch role');
+  }
+
+  const data = await res.json();
+  const updatedUser: UserProfile = data.user;
+  localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+  return updatedUser;
+}
+
+export async function fetchOrgConfig(): Promise<any> {
+  const token = getStoredToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch('/api/org/config', { headers });
+  if (!res.ok) throw new Error('Failed to fetch organization configuration');
+  return res.json();
+}
+
+export async function updateOrgConfig(updates: Record<string, any>): Promise<any> {
+  const token = getStoredToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const res = await fetch('/api/org/config', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updates),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to update organization' }));
+    throw new Error(err.detail || 'Failed to update organization');
+  }
+
+  return res.json();
+}
+
+export async function fetchIndustryPresets(): Promise<any[]> {
+  const res = await fetch('/api/org/presets');
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.presets || [];
+}
+
+export async function applyIndustryPreset(presetId: string): Promise<any> {
+  const token = getStoredToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const res = await fetch(`/api/org/presets/${encodeURIComponent(presetId)}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to apply preset' }));
+    throw new Error(err.detail || 'Failed to apply preset');
+  }
+
+  return res.json();
+}
+
+export async function switchWorkspace(workspaceId: string): Promise<any> {
+  const token = getStoredToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const res = await fetch('/api/org/workspace/switch', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ workspace_id: workspaceId }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to switch workspace' }));
+    throw new Error(err.detail || 'Failed to switch workspace');
+  }
+
+  return res.json();
+}
+

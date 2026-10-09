@@ -1,82 +1,51 @@
 import {
-  Video, Linkedin, Twitter, Presentation, FileText,
-  BarChart2, Layout, PenTool, Check
+  Presentation, FileText,
+  BarChart2, Check, ClipboardCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { OutputFormat, OutputFormatMeta } from '@/types';
 
 const OUTPUT_FORMATS: OutputFormatMeta[] = [
   {
-    id: 'linkedin',
-    label: 'LinkedIn Post',
-    description: 'Executive positioning & hooks',
-    icon: 'Linkedin',
-    estimatedTime: '~20s',
-    badge: 'Popular',
-  },
-  {
-    id: 'twitter',
-    label: 'X / Twitter',
-    description: 'Thread breakdown & hooks',
-    icon: 'Twitter',
-    estimatedTime: '~15s',
+    id: 'inspection_analysis',
+    label: 'Inspection & Risk Report',
+    description: 'Defect analysis, compliance verification & sign-off',
+    icon: 'ClipboardCheck',
+    estimatedTime: '~25s',
+    badge: 'Standard',
   },
   {
     id: 'executive_summary',
-    label: 'Executive Brief',
-    description: 'Decision matrices & KPIs',
+    label: 'Executive Approval Brief',
+    description: 'Decision matrices, C-suite KPIs & executive actions',
     icon: 'BarChart2',
-    estimatedTime: '~25s',
-    badge: 'Strategic',
+    estimatedTime: '~20s',
+    badge: 'Executive',
   },
   {
     id: 'presentation',
-    label: 'Deck Presentation',
-    description: 'Slide deck & speaker notes',
+    label: 'Deck Presentation (.pptx)',
+    description: 'Executive slides with field findings & notes',
     icon: 'Presentation',
-    estimatedTime: '~45s',
+    estimatedTime: '~35s',
+    badge: 'PPTX',
   },
   {
     id: 'advisory',
     label: 'Technical Advisory',
-    description: 'Mitigation frameworks',
+    description: 'Mitigation frameworks & corrective interventions',
     icon: 'FileText',
-    estimatedTime: '~35s',
-    badge: 'Enterprise',
-  },
-  {
-    id: 'infographic',
-    label: 'Infographic Spec',
-    description: 'Data visual layout & calls',
-    icon: 'Layout',
     estimatedTime: '~30s',
-  },
-  {
-    id: 'article',
-    label: 'Deep-Dive Article',
-    description: 'Technical whitepaper',
-    icon: 'PenTool',
-    estimatedTime: '~50s',
-  },
-  {
-    id: 'video',
-    label: 'AI Video Package',
-    description: 'Scenes & neural audio',
-    icon: 'Video',
-    estimatedTime: '2–4m',
-    badge: 'Precision',
+    badge: 'Engineering',
   },
 ];
 
+
 const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
-  Video,
-  Linkedin,
-  Twitter,
   Presentation,
   FileText,
   BarChart2,
-  Layout,
-  PenTool,
+  ClipboardCheck,
 };
 
 interface OutputFormatCardProps {

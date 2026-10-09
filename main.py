@@ -13,6 +13,8 @@ from fastapi.staticfiles import StaticFiles
 from api.routes import router
 from api.rag_routes import router as rag_router
 from api.auth_routes import router as auth_router
+from api.org_routes import router as org_router
+from api.engineering_routes import router as engineering_router
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -49,6 +51,8 @@ app.add_middleware(
 app.include_router(router, prefix="/api")
 app.include_router(rag_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(org_router, prefix="/api")
+app.include_router(engineering_router, prefix="/api")
 
 # ---------------------------------------------------------------------------
 # Static file serving for generated output files
@@ -57,6 +61,7 @@ OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount("/files", StaticFiles(directory=str(OUTPUT_DIR)), name="files")
+app.mount("/output", StaticFiles(directory=str(OUTPUT_DIR)), name="output")
 
 # ---------------------------------------------------------------------------
 # Startup: ensure all output sub-directories exist
@@ -64,7 +69,7 @@ app.mount("/files", StaticFiles(directory=str(OUTPUT_DIR)), name="files")
 @app.on_event("startup")
 async def create_output_dirs():
     for sub in ["uploads", "images", "videos", "audio", "plans",
-                "presentations", "content", "slide_plans"]:
+                "presentations", "content", "slide_plans", "drawings", "spreadsheets", "documents", "infographics"]:
         (OUTPUT_DIR / sub).mkdir(parents=True, exist_ok=True)
     logger.info("BizzoraAI started — output directory ready at '%s'", OUTPUT_DIR)
 

@@ -2,17 +2,18 @@ import json
 import os
 
 from dotenv import load_dotenv
-from services.llm_provider import LLMProvider
+from services.llm_pool import LLMPool
 
 load_dotenv()
 
 
 class ContentIntelligence:
 
-    def __init__(self):
-        self.llm = LLMProvider()
+    def __init__(self, provider: str = "auto"):
+        self.provider = provider
+        self.llm = LLMPool(preferred_provider=provider)
 
-    def analyze(self, extracted_text, source_files=None):
+    def analyze(self, extracted_text, source_files=None, file_metas=None):
 
         if not extracted_text or not extracted_text.strip():
             raise ValueError(
@@ -20,6 +21,7 @@ class ContentIntelligence:
             )
 
         source_files = source_files or []
+        file_metas = file_metas or []
 
         prompt = f"""
 You are the Content Intelligence Engine of BizzoraAI.
@@ -129,21 +131,29 @@ Rules:
 
             text = text.strip()
 
+        import re
         try:
-
             content_model = json.loads(text)
-
         except json.JSONDecodeError as e:
+            # Attempt to extract JSON substring if wrapped in commentary
+            json_match = re.search(r"\{[\s\S]*\}", text)
+            if json_match:
+                try:
+                    content_model = json.loads(json_match.group(0))
+                except Exception:
+                    content_model = None
+            else:
+                content_model = None
 
-            print("\nLLM returned invalid JSON:")
-            print(text)
-
-            raise ValueError(
-                f"Content Intelligence returned invalid JSON: {e}"
-            )
+            if content_model is None:
+                first_lines = [l.strip() for l in extracted_text.splitlines() if l.strip()][:5]
+                content_model = {
+                    "title": first_lines[0][:80] if first_lines else "Ingested Industrial Document",
+                    "summary": " ".join(first_lines)[:400] if first_lines else "Ingested technical content.",
+                    "key_points": [l for l in first_lines[:3]],
+                }
 
         # Basic validation
-
         required_fields = [
             "title",
             "content_type",
@@ -164,11 +174,8 @@ Rules:
         ]
 
         for field in required_fields:
-
             if field not in content_model:
-
                 content_model[field] = []
-
                 if field in [
                     "title",
                     "content_type",
@@ -178,9 +185,26 @@ Rules:
                 ]:
                     content_model[field] = ""
 
-        # Always preserve actual source files
+        # Deterministically extract equipment tags, line numbers, and measurements from source
+        eq_tags = list(dict.fromkeys(re.findall(r"\b[A-Z]{1,4}-[0-9]{2,4}[A-Z]?\b", extracted_text)))
+        measurements = list(dict.fromkeys(re.findall(r"\b\d+(?:\.\d+)?\s*(?:bar|psi|C|°C|mm|m|kW|V|A|Hz|rpm|mm/s|kPa|MPa)\b", extracted_text, re.IGNORECASE)))
 
+        existing_entities = [str(e) for e in content_model.get("entities", [])]
+        for tag in eq_tags:
+            if tag not in existing_entities:
+                existing_entities.append(tag)
+        content_model["entities"] = existing_entities
+
+        existing_stats = [str(s) for s in content_model.get("statistics", [])]
+        for m in measurements:
+            if m not in existing_stats:
+                existing_stats.append(m)
+        content_model["statistics"] = existing_stats
+
+        # Always preserve actual source files, raw extracted text, and file metadata
+        content_model["raw_text"] = extracted_text
         content_model["source_files"] = source_files
+        content_model["file_metas"] = file_metas
 
         return content_model
     def print_model(self, content_model):

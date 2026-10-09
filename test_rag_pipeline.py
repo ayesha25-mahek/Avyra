@@ -32,7 +32,7 @@ def main():
     rag_db = RagDatabase(db_url)
     try:
         init_res = rag_db.init_db("schema.sql")
-        print(f"[✓] Schema Init Result: {init_res}")
+        print(f"[OK] Schema Init Result: {init_res}")
     except Exception as e:
         print(f"[!] Schema init error: {e}")
         return
@@ -67,7 +67,7 @@ def main():
             source_type="advisory",
             metadata={"department": "Security & Marketing", "classification": "Confidential"},
         )
-        print(f"[✓] Ingest Result: {ingest_res}")
+        print(f"[OK] Ingest Result: {ingest_res}")
         doc_id = ingest_res["document_id"]
     except Exception as e:
         print(f"[!] Ingest error: {e}")
@@ -78,7 +78,7 @@ def main():
     print(f"\n[Step 3] Performing Semantic Retrieval for Query:\n    '{query}'")
     try:
         results = rag_service.retrieve(query=query, top_k=3, threshold=0.1)
-        print(f"[✓] Retrieved {len(results)} matching chunks:")
+        print(f"[OK] Retrieved {len(results)} matching chunks:")
         for i, r in enumerate(results, 1):
             print(f"    - Chunk {i} (Similarity: {r['similarity']:.4f}): {r['content'][:120]}...")
     except Exception as e:
@@ -98,11 +98,11 @@ def main():
         print("=" * 60)
         print(summary_res["executive_summary"])
         print("=" * 60)
-        print(f"[✓] Sources Cited: {summary_res['retrieved_sources_count']}")
+        print(f"[OK] Sources Cited: {summary_res['retrieved_sources_count']}")
     except Exception as e:
         print(f"[!] Summary generation error: {e}")
 
-    print("\n[✓] ALL RAG PIPELINE CHECKS COMPLETED SUCCESSFULLY!")
+    print("\n[OK] ALL RAG PIPELINE CHECKS COMPLETED SUCCESSFULLY!")
 
 if __name__ == "__main__":
     main()

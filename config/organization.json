@@ -1,0 +1,48 @@
+{
+  "org_id": "org_refinery",
+  "org_name": "Mangalore Refinery & Petrochemicals (MRPL)",
+  "industry": "Refinery & Petrochemicals",
+  "facility_location": "Mangalore, Karnataka, India",
+  "active_workspace_id": "ws_cdu1",
+  "workspaces": [
+    {
+      "id": "ws_cdu1",
+      "name": "Crude Distillation Unit 1 (CDU-1)",
+      "description": "Atmospheric & Vacuum crude fractionation train",
+      "unit_code": "U-100"
+    },
+    {
+      "id": "ws_utilities",
+      "name": "Plant Utilities & Power Block",
+      "description": "High-pressure boiler feed pump networks & cooling towers",
+      "unit_code": "U-400"
+    },
+    {
+      "id": "ws_tankfarm",
+      "name": "Tank Farm & Offsite Piping",
+      "description": "Finished product hydrocarbon storage manifolds & custody transfer",
+      "unit_code": "U-700"
+    }
+  ],
+  "terminology": {
+    "asset_label": "Equipment Tag",
+    "inspection_label": "Statutory Integrity Audit",
+    "drawing_label": "P&ID Schematic",
+    "standard_label": "OISD / API Standard",
+    "defect_label": "Observed Non-Conformance",
+    "telemetry_label": "Process Telemetry Reading"
+  },
+  "enabled_modules": [
+    "dashboard",
+    "document",
+    "defect",
+    "drawing",
+    "reports",
+    "sop",
+    "sandbox",
+    "spreadsheet",
+    "files",
+    "audit",
+    "settings"
+  ]
+}

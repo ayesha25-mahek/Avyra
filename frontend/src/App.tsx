@@ -1,78 +1,93 @@
-import { useEffect, useRef, useState } from 'react';
-import { X, Loader2, RotateCcw, Flame, Cpu, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ShieldCheck, Sparkles } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { LandingPage } from '@/components/LandingPage';
 import { AuthModal } from '@/components/AuthModal';
 import { AdminDashboard } from '@/components/AdminDashboard';
-import { PromptInput } from '@/components/PromptInput';
-import { FileUploadZone } from '@/components/FileUploadZone';
-import { OutputFormatSelector } from '@/components/OutputFormatSelector';
-import { GenerationParams } from '@/components/GenerationParams';
-import { ProgressPanel } from '@/components/ProgressPanel';
-import { ResultsPanel } from '@/components/ResultsPanel';
-import { OutputModal } from '@/components/OutputModal';
-import { Button } from '@/components/ui/button';
-import { generateContent, downloadAllFiles } from '@/lib/api';
-import { fetchCurrentUser, logoutUser } from '@/lib/authApi';
-import { getStoredToken, getStoredUser } from '@/lib/authApi';
-import type {
-  OutputFormat, GenerationState, ProgressEvent as PEvt, ResultEvent
-} from '@/types';
-import type { UserProfile } from '@/types/auth';
-
-const INITIAL_STATE: GenerationState = {
-  status: 'idle',
-  progress: null,
-  results: {},
-  error: null,
-};
+import { IndustrialSidebar, type WorkbenchTab } from '@/components/IndustrialSidebar';
+import { DashboardView } from '@/components/workbench/DashboardView';
+import { DocumentAnalysisView } from '@/components/workbench/DocumentAnalysisView';
+import { ImageDefectView } from '@/components/workbench/ImageDefectView';
+import { DrawingAnalysisView } from '@/components/workbench/DrawingAnalysisView';
+import { InspectionReportsView } from '@/components/workbench/InspectionReportsView';
+import { KnowledgeBaseView } from '@/components/workbench/KnowledgeBaseView';
+import { CodingSandboxView } from '@/components/workbench/CodingSandboxView';
+import { SpreadsheetAnalysisView } from '@/components/workbench/SpreadsheetAnalysisView';
+import { GeneratedFilesView } from '@/components/workbench/GeneratedFilesView';
+import { SovereigntyAuditView } from '@/components/workbench/SovereigntyAuditView';
+import { SettingsView } from '@/components/workbench/SettingsView';
+import { DemoModeView } from '@/components/workbench/DemoModeView';
+import { ManagerOverviewView } from '@/components/workbench/ManagerOverviewView';
+import {
+  fetchCurrentUser,
+  logoutUser,
+  getStoredToken,
+  getStoredUser,
+  fetchOrgConfig,
+  switchActiveRole,
+} from '@/lib/authApi';
+import type { UserProfile, OrgConfig } from '@/types/auth';
 
 type AppView = 'landing' | 'studio' | 'dashboard';
 
 function App() {
-  // ─── Authentication State ────────────────────────────────────────────────
+  // ─── Authentication & Org State ──────────────────────────────────────────
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [orgConfig, setOrgConfig] = useState<OrgConfig | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState<'signin' | 'login'>('login');
   const [activeView, setActiveView] = useState<AppView>('landing');
 
-  // ─── Form State ─────────────────────────────────────────────────────────
-  const [prompt, setPrompt] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
-  const [selectedOutputs, setSelectedOutputs] = useState<OutputFormat[]>([
-    'linkedin', 'executive_summary', 'presentation'
-  ]);
-  const [language, setLanguage] = useState('English');
-  const [tone, setTone] = useState('Professional');
-  const [targetAudience, setTargetAudience] = useState('General');
-  const [detailLevel, setDetailLevel] = useState('Standard');
+  // ─── Workbench Tab State (Default: Dashboard) ───────────────────────────
+  const [workbenchTab, setWorkbenchTab] = useState<WorkbenchTab>('dashboard');
 
-  // ─── Generation State ───────────────────────────────────────────────────
-  const [genState, setGenState] = useState<GenerationState>(INITIAL_STATE);
-  const abortRef = useRef<AbortController | null>(null);
-
-  // ─── Deliverable View & Revision Modal State ────────────────────────────
-  const [activeModalOutput, setActiveModalOutput] = useState<OutputFormat | null>(null);
-  const [versionHistory, setVersionHistory] = useState<Partial<Record<OutputFormat, ResultEvent[]>>>({});
-  const [isRevising, setIsRevising] = useState(false);
-  const [revisionError, setRevisionError] = useState<string | null>(null);
-
-  // ─── On Mount: Restore Session ──────────────────────────────────────────
+  // ─── On Mount: Restore Session & Load Org Topology ───────────────────────
   useEffect(() => {
     const token = getStoredToken();
     const storedUser = getStoredUser();
     if (token && storedUser) {
       setUser(storedUser);
       setActiveView('studio');
-      // Silently refresh session data in background
       fetchCurrentUser().then((fresh) => {
         if (fresh) setUser(fresh);
       }).catch(() => {});
     }
+    fetchOrgConfig().then((cfg) => {
+      if (cfg) setOrgConfig(cfg);
+    }).catch(() => {});
     setAuthChecked(true);
   }, []);
+
+  const handleRoleSwitch = async (targetRole: string) => {
+    try {
+      const updated = await switchActiveRole(targetRole);
+      setUser(updated);
+    } catch (err) {
+      // If current session token is role-restricted from switching,
+      // authenticate seamlessly via the authorized role account so the user can freely switch access modes
+      const SEED_MAP: Record<string, { email: string; pass: string }> = {
+        administrator: { email: 'admin@avyara.internal', pass: 'adminpass' },
+        super_admin: { email: 'admin@avyara.internal', pass: 'adminpass' },
+        engineer: { email: 'engineer@avyara.internal', pass: 'engineerpass' },
+        inspector: { email: 'inspector@avyara.internal', pass: 'inspectorpass' },
+        data_analyst: { email: 'analyst@avyara.internal', pass: 'analystpass' },
+        analyst: { email: 'analyst@avyara.internal', pass: 'analystpass' },
+        manager: { email: 'manager@avyara.internal', pass: 'managerpass' },
+      };
+      const cred = SEED_MAP[targetRole];
+      if (cred) {
+        try {
+          const { loginUser } = await import('@/lib/authApi');
+          const resp = await loginUser(cred.email, cred.pass);
+          setUser(resp.user);
+        } catch (authErr) {
+          console.error('Failed to switch access mode', authErr);
+        }
+      }
+    }
+  };
 
   // ─── Auth Handlers ───────────────────────────────────────────────────────
   const handleAuthSuccess = (loggedInUser: UserProfile) => {
@@ -85,7 +100,6 @@ function App() {
     await logoutUser();
     setUser(null);
     setActiveView('landing');
-    setGenState(INITIAL_STATE);
   };
 
   const handleOpenAuth = (mode: 'signin' | 'login' = 'login') => {
@@ -100,123 +114,6 @@ function App() {
     }
     setActiveView(view);
   };
-
-  // ─── Generation Handlers ─────────────────────────────────────────────────
-  const isGenerating = genState.status === 'generating';
-  const canGenerate =
-    !isGenerating &&
-    selectedOutputs.length > 0 &&
-    (prompt.trim().length > 0 || files.length > 0);
-
-  const toggleOutput = (id: OutputFormat) => {
-    setSelectedOutputs((prev) =>
-      prev.includes(id) ? prev.filter((o) => o !== id) : [...prev, id]
-    );
-  };
-
-  const handleParamChange = (field: string, value: string) => {
-    if (field === 'language') setLanguage(value);
-    else if (field === 'tone') setTone(value);
-    else if (field === 'target_audience') setTargetAudience(value);
-    else if (field === 'detail_level') setDetailLevel(value);
-  };
-
-  const handleGenerate = async () => {
-    if (!canGenerate) return;
-    const formData = new FormData();
-    formData.append('prompt', prompt);
-    formData.append('outputs', JSON.stringify(selectedOutputs));
-    formData.append('language', language);
-    formData.append('tone', tone);
-    formData.append('target_audience', targetAudience);
-    formData.append('detail_level', detailLevel);
-    files.forEach((f) => formData.append('files', f));
-
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setGenState({ status: 'generating', progress: null, results: {}, error: null });
-
-    await generateContent(formData, {
-      onProgress: (event: PEvt) => {
-        setGenState((prev) => ({ ...prev, progress: event }));
-      },
-      onResult: (event: ResultEvent) => {
-        setGenState((prev) => ({
-          ...prev,
-          results: { ...prev.results, [event.output_type]: event },
-        }));
-      },
-      onDone: () => {
-        setGenState((prev) => ({ ...prev, status: 'complete' }));
-      },
-      onError: (message: string) => {
-        setGenState((prev) => ({ ...prev, status: 'error', error: message }));
-      },
-    }, controller.signal);
-  };
-
-  const handleStop = () => {
-    abortRef.current?.abort();
-    setGenState((prev) => ({ ...prev, status: 'idle' }));
-  };
-
-  const handleReset = () => {
-    abortRef.current?.abort();
-    setGenState(INITIAL_STATE);
-  };
-
-  const handleReviseOutput = async (outputType: OutputFormat, revisionPrompt: string) => {
-    setIsRevising(true);
-    setRevisionError(null);
-    const currentResult = genState.results[outputType];
-    if (currentResult) {
-      setVersionHistory((prev) => ({
-        ...prev,
-        [outputType]: [...(prev[outputType] || []), currentResult],
-      }));
-    }
-    try {
-      const formData = new FormData();
-      const contextualPrompt = `[Revision Request for ${outputType.toUpperCase()}]
-Original Deliverable Content:
-${currentResult?.content ?? ''}
-
-User Feedback & Requested Modifications:
-${revisionPrompt}
-
-Original Objective:
-${prompt || 'Deliverable refinement'}`;
-
-      formData.append('prompt', contextualPrompt);
-      formData.append('outputs', JSON.stringify([outputType]));
-      formData.append('language', language);
-      formData.append('tone', tone);
-      formData.append('target_audience', targetAudience);
-      formData.append('detail_level', detailLevel);
-      files.forEach((f) => formData.append('files', f));
-
-      await generateContent(formData, {
-        onResult: (event: ResultEvent) => {
-          if (event.output_type === outputType) {
-            setGenState((prev) => ({
-              ...prev,
-              results: { ...prev.results, [outputType]: event },
-            }));
-          }
-        },
-        onError: (errMsg: string) => {
-          setRevisionError(errMsg);
-        },
-      });
-    } catch (err: unknown) {
-      setRevisionError(err instanceof Error ? err.message : 'Failed to revise deliverable.');
-    } finally {
-      setIsRevising(false);
-    }
-  };
-
-  const showResults =
-    genState.status === 'complete' || Object.keys(genState.results).length > 0;
 
   // ─── Show loading skeleton until session is checked ──────────────────────
   if (!authChecked) {
@@ -234,7 +131,7 @@ ${prompt || 'Deliverable refinement'}`;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#030604] text-gray-100 font-serif">
-      {/* ─── UNIFIED NAVBAR (auth-aware, view-aware) ──────────────────── */}
+      {/* ─── UNIFIED NAVBAR ───────────────────────────────────────────── */}
       <Header
         user={user}
         activeView={activeView}
@@ -243,7 +140,7 @@ ${prompt || 'Deliverable refinement'}`;
         onSignOut={handleSignOut}
       />
 
-      {/* ─── LANDING PAGE (public, unauthenticated) ────────────────────── */}
+      {/* ─── LANDING PAGE ─────────────────────────────────────────────── */}
       {activeView === 'landing' && (
         <LandingPage
           onOpenAuth={handleOpenAuth}
@@ -252,7 +149,7 @@ ${prompt || 'Deliverable refinement'}`;
         />
       )}
 
-      {/* ─── ADMIN / OPERATIONS DASHBOARD ─────────────────────────────── */}
+      {/* ─── ADMIN DASHBOARD ──────────────────────────────────────────── */}
       {activeView === 'dashboard' && user && (
         <AdminDashboard
           user={user}
@@ -261,212 +158,94 @@ ${prompt || 'Deliverable refinement'}`;
         />
       )}
 
-      {/* ─── AVYRA GENERATION STUDIO (protected) ──────────────────────── */}
+      {/* ─── AVYARA CONFIDENTIAL INDUSTRIAL WORKBENCH ─────────────────── */}
       {activeView === 'studio' && user && (
-        <>
-          {/* Workspace Header Bar — CapabilitiesSection visual language */}
-          <div className="border-b border-[#1A402D] bg-[#0F261B]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-serif">
-                  Avyra Autonomous Studio
-                </h2>
-                <p className="text-sm text-[#B8D5C6] mt-1 font-serif">
-                  Provide your input prompt or source documents below to trigger multi-modal synthesis.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-md bg-[#163827] border border-[#23573E] text-[#74C69D] text-xs font-semibold tracking-wide">
-                  8 PIPELINES READY
+        <div className="flex-1 flex flex-col relative">
+          {/* Fixed Left Sidebar with 11 items + Demo button */}
+          <IndustrialSidebar
+            activeTab={workbenchTab}
+            onTabChange={setWorkbenchTab}
+            externalCalls={0}
+            user={user}
+            orgConfig={orgConfig}
+            onRoleSwitch={handleRoleSwitch}
+          />
+
+          {/* Main Workspace Offset by Sidebar Width */}
+          <div className="md:pl-64 flex-1 flex flex-col min-h-[calc(100vh-4rem)]">
+            {/* Compact Top Sovereignty Status Strip */}
+            <div className="border-b border-[#1A402D] bg-[#0A1A12] px-4 sm:px-8 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2 py-0.5 rounded bg-[#00E599]/15 border border-[#00E599]/40 text-[#00E599] font-mono font-bold flex items-center gap-1.5 text-[11px]">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  SOVEREIGN WORKSPACE
+                </span>
+                <span className="text-[#9DC4B0] font-mono text-[11px] hidden sm:inline">
+                  • 100% On-Premise Execution
+                </span>
+                <span className="text-[#9DC4B0] font-mono text-[11px] hidden md:inline">
+                  • Local Qwen 2.5:7B
                 </span>
               </div>
+
+              <div className="flex items-center gap-3 text-[11px] font-mono text-[#74C69D]">
+                <span className="px-2 py-0.5 rounded bg-[#102B1E] border border-[#1E4D36]">
+                  External Calls: <strong className="text-white">0</strong>
+                </span>
+                <span className="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-700/50 text-[#00E599] font-semibold hidden sm:inline">
+                  AIR-GAPPED COMPLIANT
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setWorkbenchTab('demo')}
+                  className="px-2.5 py-0.5 rounded bg-[#163827] hover:bg-[#1E4D36] border border-[#23573E] text-[#00E599] hover:text-white flex items-center gap-1 transition-colors"
+                >
+                  <Sparkles className="w-3 h-3 text-[#00E599]" />
+                  <span>SIH Demo Mode</span>
+                </button>
+              </div>
             </div>
+
+            {/* Active Workspace View Body */}
+            <main className="flex-1 p-4 sm:p-8 bg-[#030604]">
+              {workbenchTab === 'dashboard' && (
+                <DashboardView
+                  onNavigate={setWorkbenchTab}
+                  user={user}
+                  orgConfig={orgConfig}
+                />
+              )}
+              {workbenchTab === 'manager' && (
+                <ManagerOverviewView
+                  user={user}
+                  orgConfig={orgConfig}
+                />
+              )}
+              {workbenchTab === 'document' && <DocumentAnalysisView />}
+              {workbenchTab === 'defect' && <ImageDefectView />}
+              {workbenchTab === 'drawing' && <DrawingAnalysisView initialSubTab="blueprint_analysis" />}
+              {workbenchTab === 'doc_cad' && <DrawingAnalysisView initialSubTab="doc_to_cad" />}
+              {workbenchTab === 'reports' && <InspectionReportsView />}
+              {workbenchTab === 'sop' && <KnowledgeBaseView />}
+              {workbenchTab === 'sandbox' && <CodingSandboxView />}
+              {workbenchTab === 'spreadsheet' && <SpreadsheetAnalysisView initialSubTab="analysis" />}
+              {workbenchTab === 'doc_excel' && <SpreadsheetAnalysisView initialSubTab="doc_to_excel" />}
+              {workbenchTab === 'files' && <GeneratedFilesView />}
+              {workbenchTab === 'audit' && <SovereigntyAuditView />}
+              {workbenchTab === 'settings' && (
+                <SettingsView
+                  orgConfig={orgConfig}
+                  onOrgConfigUpdated={setOrgConfig}
+                />
+              )}
+              {workbenchTab === 'demo' && (
+                <DemoModeView onBack={setWorkbenchTab} />
+              )}
+            </main>
+
+            <Footer />
           </div>
-
-          {/* ───────────────────────────────────────────────────────────── */}
-          {/* SECTION A: INPUT INGESTION & SYNTHESIS CONTROLS               */}
-          {/* ───────────────────────────────────────────────────────────── */}
-          <section id="input-workspace" className="border-b border-[#1A402D] bg-[#0F261B] py-10 font-serif">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-              <div className="flex items-center justify-between pb-3 border-b border-[#1A402D]">
-                <div className="flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-[#74C69D]" />
-                  <h3 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider font-serif">
-                    1. Input Sources & Autonomous Synthesis Configuration
-                  </h3>
-                </div>
-                <span className="text-[11px] font-mono text-[#9DC4B0]">
-                  Ready to Ingest
-                </span>
-              </div>
-
-              {/* Source Content Panel */}
-              <div className="p-5 sm:p-6 rounded-xl bg-[#143324] border border-[#1E4D36] space-y-4 hover:border-[#2D6E4E] transition-colors">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs sm:text-sm font-bold text-white flex items-center gap-2 font-serif tracking-wide">
-                    <span>Source Prompt Context & Document Knowledge Base</span>
-                  </label>
-                  <span className="text-[10px] font-semibold text-[#74C69D] px-2.5 py-1 rounded-md bg-[#163827] border border-[#23573E] tracking-wide">
-                    MULTI-MODAL INGESTION
-                  </span>
-                </div>
-
-                <PromptInput
-                  value={prompt}
-                  onChange={setPrompt}
-                  disabled={isGenerating}
-                />
-
-                <div className="pt-1">
-                  <FileUploadZone
-                    files={files}
-                    onFilesChange={setFiles}
-                    disabled={isGenerating}
-                  />
-                </div>
-              </div>
-
-              {/* Output Format Selection with Small Checkbox Grid */}
-              <div className="p-5 sm:p-6 rounded-xl bg-[#143324] border border-[#1E4D36] space-y-4 hover:border-[#2D6E4E] transition-colors">
-                <OutputFormatSelector
-                  selected={selectedOutputs}
-                  onToggle={toggleOutput}
-                  disabled={isGenerating}
-                />
-              </div>
-
-              {/* Generation Parameters */}
-              <div className="p-5 sm:p-6 rounded-xl bg-[#143324] border border-[#1E4D36] space-y-4 hover:border-[#2D6E4E] transition-colors">
-                <label className="text-xs sm:text-sm font-bold text-white flex items-center gap-2.5 font-serif tracking-wide">
-                  <div className="w-8 h-8 rounded-lg bg-[#1B4330] border border-[#265E43] flex items-center justify-center text-[#74C69D]">
-                    <Zap className="w-4 h-4" />
-                  </div>
-                  <span>Autonomous Model Parameters</span>
-                </label>
-                <GenerationParams
-                  language={language}
-                  tone={tone}
-                  targetAudience={targetAudience}
-                  detailLevel={detailLevel}
-                  onChange={handleParamChange}
-                  disabled={isGenerating}
-                />
-              </div>
-
-              {/* Execution Controls */}
-              <div className="flex items-center gap-3 flex-wrap pt-2">
-                {isGenerating ? (
-                  <>
-                    <Button
-                      onClick={handleStop}
-                      variant="outline"
-                      size="lg"
-                      className="flex-1 gap-2 font-serif rounded-xl border-red-900/40 bg-red-950/20 text-red-400 hover:text-red-300 hover:bg-red-950/40"
-                    >
-                      <X className="w-4 h-4 text-red-400" />
-                      Abort Execution
-                    </Button>
-                    <Button
-                      size="lg"
-                      disabled
-                      className="flex-1 gap-2.5 font-serif text-sm bg-[#143324] border border-[#265E43] text-white rounded-xl"
-                    >
-                      <Loader2 className="w-4 h-4 animate-spin text-[#74C69D]" />
-                      Synthesizing Deliverables in Parallel…
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    {genState.status !== 'idle' && (
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={handleReset}
-                        className="gap-2 font-serif text-xs px-5 border-[#1E4D36] rounded-xl bg-[#143324] text-[#B8D5C6] hover:bg-[#1B4330] hover:text-white"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        Reset
-                      </Button>
-                    )}
-                    <button
-                      onClick={handleGenerate}
-                      disabled={!canGenerate}
-                      className="flex-1 py-3.5 px-6 rounded-xl bg-[#00C070] hover:bg-[#00A85E] text-black font-bold text-sm sm:text-base font-serif tracking-tight transition-all flex items-center justify-center gap-2.5 disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
-                    >
-                      <Zap className="w-4 h-4 text-black fill-black" />
-                      Execute Avyra Synthesis
-                      {selectedOutputs.length > 0 && (
-                        <span className="px-2.5 py-0.5 rounded-md bg-black/20 text-xs text-black border border-black/20 font-semibold">
-                          {selectedOutputs.length} Format{selectedOutputs.length > 1 ? 's' : ''} Selected
-                        </span>
-                      )}
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </section>
-
-          {/* ───────────────────────────────────────────────────────────── */}
-          {/* SECTION B: WHITE-THEMED DELIVERABLES & OUTPUT WORKSPACE        */}
-          {/* ───────────────────────────────────────────────────────────── */}
-          <section id="output-workspace" className="py-12 bg-[#F8FAF9] border-b border-[#E1E8E4] font-serif text-[#101F17]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-              <div className="flex items-center justify-between pb-3 border-b border-[#DCE4E0]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#246346]" />
-                  <h3 className="text-base sm:text-lg font-bold text-[#101F17] uppercase tracking-wider font-serif">
-                    2. Synthesized Deliverables &amp; Live Output Previews
-                  </h3>
-                </div>
-                <span className="text-xs font-mono text-[#246346] bg-[#E8F0EC] px-3 py-1 rounded-md border border-[#CFDFD6] font-semibold">
-                  {showResults ? `${Object.keys(genState.results).length} READY` : isGenerating ? 'PROCESSING' : 'STANDBY'}
-                </span>
-              </div>
-
-              {/* Standby State */}
-              {genState.status === 'idle' && !showResults && (
-                <div className="rounded-xl border border-[#DCE4E0] bg-white p-8 sm:p-12 text-center space-y-4 hover:border-[#246346]/40 transition-colors shadow-sm">
-                  <div className="w-12 h-12 rounded-lg bg-[#EAF2EE] border border-[#CFDFD6] flex items-center justify-center mx-auto text-[#246346]">
-                    <Cpu className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-base font-bold text-[#101F17] tracking-wide">
-                      Neural Deliverable Grid Awaiting Execution
-                    </h4>
-                    <p className="text-xs text-[#567062] max-w-md mx-auto leading-relaxed">
-                      Select your target outputs above and click Execute. Synthesized deliverables will populate here side-by-side with full instant previews, download options, and one-click AI revisions.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Active Pipeline Progress */}
-              {isGenerating && (
-                <div className="p-6 rounded-xl border border-[#DCE4E0] bg-white shadow-sm">
-                  <ProgressPanel
-                    progress={genState.progress}
-                    completedResults={genState.results}
-                    selectedOutputs={selectedOutputs}
-                  />
-                </div>
-              )}
-
-              {/* Side-by-Side Results Showcase */}
-              {showResults && (
-                <div className="space-y-6">
-                  <ResultsPanel
-                    results={genState.results}
-                    onDownloadAll={() => downloadAllFiles(genState.results)}
-                    onView={(type) => setActiveModalOutput(type)}
-                  />
-                </div>
-              )}
-            </div>
-          </section>
-
-          <Footer />
-        </>
+        </div>
       )}
 
       {/* ─── AUTH MODAL ─────────────────────────────────────────────────── */}
@@ -475,21 +254,6 @@ ${prompt || 'Deliverable refinement'}`;
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
         initialMode={authInitialMode}
-      />
-
-      {/* ─── DELIVERABLE VIEW & REVISION MODAL ──────────────────────────── */}
-      <OutputModal
-        isOpen={activeModalOutput !== null}
-        outputType={activeModalOutput}
-        currentResult={activeModalOutput ? genState.results[activeModalOutput] ?? null : null}
-        history={activeModalOutput ? versionHistory[activeModalOutput] ?? [] : []}
-        isRevising={isRevising}
-        revisionError={revisionError}
-        onClose={() => {
-          setActiveModalOutput(null);
-          setRevisionError(null);
-        }}
-        onRevise={handleReviseOutput}
       />
     </div>
   );

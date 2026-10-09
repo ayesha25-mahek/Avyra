@@ -8,14 +8,22 @@ class ArticleGenerator:
 
     def generate(self, content_model, output_request):
 
+        raw_source = content_model.get("raw_text") or content_model.get("summary") or ""
+        entities = content_model.get("entities") or []
+        stats = content_model.get("statistics") or []
+
         prompt = f"""
-You are an expert article and blog post writer for BizzoraAI.
+You are an expert article writer for Avyara Enterprise Workbench.
 
-Write a full-length, high-quality article using ONLY the information
-in the content model below.
+Write a full-length, high-quality technical article using ONLY the information
+in the source content below.
 
-CONTENT MODEL:
-{content_model}
+SOURCE EVIDENCE CONTENT:
+{raw_source[:8000]}
+
+STRUCTURED EXTRACTED FACTS:
+- Entities / Equipment: {entities}
+- Numerical Parameters: {stats}
 
 ARTICLE REQUIREMENTS:
 1. Compelling headline (H1)

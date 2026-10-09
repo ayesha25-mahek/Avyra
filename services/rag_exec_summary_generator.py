@@ -84,9 +84,9 @@ Please produce a comprehensive, structured Executive Summary in clean Markdown f
 """
 
         # 3. Generate via LLM Pool
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
         generated_content = self.llm.generate(
-            prompt=user_prompt,
-            system_prompt=system_prompt,
+            prompt=full_prompt,
             temperature=0.3, # low temperature for high precision grounding
         )
 

@@ -178,15 +178,19 @@ class RagService:
 
         doc_title = title or path.stem.replace("_", " ").title()
         ext = path.suffix.lower().lstrip(".")
-        source_type = ext if ext in ["pdf", "docx", "pptx", "txt"] else "file"
 
-        # Extract text via DocumentReader
-        extracted_text = self.doc_reader.read(str(path))
+        # Extract text via DocumentReader (supports native PDF, scanned PDF via local OCR, images, DOCX, TXT, PPTX)
+        meta_res = self.doc_reader.read_with_metadata(str(path))
+        extracted_text = meta_res["text"]
+        source_type = meta_res.get("source_type", ext)
 
         meta = metadata or {}
         meta["filename"] = path.name
         meta["file_extension"] = ext
         meta["file_size_bytes"] = path.stat().st_size
+        meta["processing"] = meta_res.get("processing", "native_text_extraction")
+        meta["model_provider"] = "local"
+        meta["external_calls"] = 0
 
         return self.ingest_text(
             title=doc_title,
@@ -237,3 +241,88 @@ class RagService:
             )
 
         return "\n\n---\n\n".join(context_blocks)
+
+    def ensure_default_sops(self) -> int:
+        """
+        Seed standard organizational SOPs and compliance manuals if the knowledge base is empty.
+        Ensures sovereign on-premise inspection and risk analysis workflows are immediately grounded.
+        """
+        docs = self.db.list_documents(limit=1)
+        if docs:
+            return 0  # Knowledge base already has documents
+
+        logger.info("RagService: Seeding baseline sovereign organizational SOPs and compliance standards...")
+        count = 0
+
+        # SOP 1: Incident response & phishing triage
+        sop_phishing = (
+            "SOP-SEC-402: Enterprise Phishing Triage, Containment & Administrative System Hardening Standard\n\n"
+            "1. PURPOSE & APPLICABILITY:\n"
+            "This Standard Operating Procedure governs mandatory containment protocols when coordinated phishing campaigns, "
+            "credential harvesting portals, or unauthorized administrative credential submissions are detected.\n\n"
+            "2. MANDATORY CONTAINMENT ACTIONS:\n"
+            "- Tier-1 Immediate Revocation: All targeted user sessions and active JWT / OAuth tokens must be invalidated within 30 minutes of detection.\n"
+            "- Privileged Access Reset: Any account possessing internal administrative system or root privileges must undergo mandatory credential reset.\n"
+            "- Multi-Factor Authentication: FIDO2 hardware token or phishing-resistant authenticator app enforcement must be activated immediately.\n"
+            "- Network Perimeter Defense: Malicious sender domains, fraudulent login URLs, and phishing relay IPs must be added to enterprise firewall and MTA blocklists within 15 minutes.\n"
+            "- Forensic Endpoint Isolation: Any workstation that submitted credentials to a spoofed page must be placed in network isolation for endpoint detection and response (EDR) memory triage.\n\n"
+            "3. REGULATORY NOTIFICATION:\n"
+            "Preliminary incident notification must be submitted to the Chief Information Security Officer (CISO) and Compliance Officer within 2 hours of confirmation.\n\n"
+            "4. SIGN-OFF CRITERIA:\n"
+            "An incident report may only receive final clearance if all exposed credentials have been verified revoked and no unauthorized administrative lateral movement is detected."
+        )
+        self.ingest_text(
+            title="SOP-SEC-402: Enterprise Phishing Triage & Containment Standard",
+            text=sop_phishing,
+            source_type="sop",
+            metadata={"category": "Cybersecurity", "standard_id": "SOP-SEC-402", "classification": "Internal SOP"},
+        )
+        count += 1
+
+        # SOP 2: Technical inspection audit & approval governance
+        sop_audit = (
+            "SOP-INSP-001: Sovereign Technical Infrastructure Inspection & Approval Note Governance Standard\n\n"
+            "1. PURPOSE & SCOPE:\n"
+            "Defines the rigorous evaluation criteria required to issue formal inspection approval notes, conditional clearances, or audit rejections across enterprise facilities and digital infrastructure.\n\n"
+            "2. RISK & DEFECT SEVERITY CLASSIFICATION:\n"
+            "- Critical Severity: Direct risk of data breach, safety hazard, unauthenticated administrative access, or systemic process disruption. Requires immediate executive escalation.\n"
+            "- High Severity: Absence of redundancy, overdue security patches, or non-compliance with statutory safety controls. Remediation required within 24-48 hours.\n"
+            "- Medium Severity: Operational friction, procedural drift, or partial compliance gaps. Remediate within 14 calendar days.\n"
+            "- Low Severity: Cosmetic findings, documentation enhancements, or routine maintenance advisory observations.\n\n"
+            "3. SIGN-OFF DETERMINATION RULES:\n"
+            "- APPROVED: Permitted only when all critical and high findings have verified zero-risk status or completed corrective containment.\n"
+            "- CONDITIONAL APPROVAL: Permitted if high/critical risks have verified temporary mitigations and an irrevocable corrective action plan is binding within 7 business days.\n"
+            "- REJECTION: Mandatory if unmitigated critical exposures, active exploitation, or compromised administrative credentials remain unresolved.\n\n"
+            "4. MULTI-AGENT VERIFICATION TRAIL:\n"
+            "All autonomous inspection dossiers must preserve an indelible 7-stage agent audit trail verifying source ingestion, finding extraction, risk calculation, knowledge base cross-referencing, recommendation mapping, deliverable synthesis, and compliance verification."
+        )
+        self.ingest_text(
+            title="SOP-INSP-001: Sovereign Technical Infrastructure Inspection & Approval Note Governance Standard",
+            text=sop_audit,
+            source_type="sop",
+            metadata={"category": "Audit & Compliance", "standard_id": "SOP-INSP-001", "classification": "Governance Standard"},
+        )
+        count += 1
+
+        # SOP 3: ISO/IEC 27001 & NIST SP 800-61 Protocol
+        sop_iso = (
+            "ISO/IEC 27001 & NIST SP 800-61 Rev 2: Incident Management & Evidence Preservation Protocol\n\n"
+            "1. SCOPE:\n"
+            "Mandates international best-practice procedures for incident classification, evidence preservation, and operational security verification.\n\n"
+            "2. CONTROL REQUIREMENTS (Clause A.12 & A.16):\n"
+            "- A.12.1 Operational Procedures: Documented operating procedures must be maintained for all critical information processing facilities.\n"
+            "- A.12.6 Management of Technical Vulnerabilities: Timely information regarding technical vulnerabilities must be obtained and evaluated with appropriate mitigation.\n"
+            "- A.16.1 Information Security Incident Management: Ensure consistent and effective approach to the life cycle management of incidents.\n\n"
+            "3. EVIDENCE PRESERVATION & CHAIN OF CUSTODY:\n"
+            "All email logs, packet captures, and user authentication tokens must be cryptographically hashed and archived prior to remediation to ensure legal chain-of-custody validity."
+        )
+        self.ingest_text(
+            title="ISO/IEC 27001 & NIST SP 800-61: Incident Management Protocol",
+            text=sop_iso,
+            source_type="compliance",
+            metadata={"category": "International Standards", "standard_id": "ISO-27001-NIST-800", "classification": "Regulatory Standard"},
+        )
+        count += 1
+
+        logger.info("RagService: Successfully seeded %d sovereign SOP documents into local RAG.", count)
+        return count

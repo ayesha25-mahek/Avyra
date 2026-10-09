@@ -42,7 +42,13 @@ const DETAIL_LEVELS = [
   { value: 'Comprehensive', label: 'Comprehensive 360° Package' },
 ];
 
+const PROVIDERS = [
+  { value: 'auto', label: 'Existing Providers (Gemini / Groq Cascade)' },
+  { value: 'ollama', label: 'Local Ollama (qwen2.5:7b Sovereign)' },
+];
+
 interface GenerationParamsProps {
+  provider?: string;
   language: string;
   tone: string;
   targetAudience: string;
@@ -52,7 +58,7 @@ interface GenerationParamsProps {
 }
 
 const GenerationParams: React.FC<GenerationParamsProps> = ({
-  language, tone, targetAudience, detailLevel, onChange,
+  provider = 'auto', language, tone, targetAudience, detailLevel, onChange,
 }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -72,7 +78,7 @@ const GenerationParams: React.FC<GenerationParamsProps> = ({
             Execution Parameters
           </span>
           <span className="text-xs font-serif text-[#9DC4B0] hidden sm:inline-block border-l border-[#1E4D36] pl-2.5">
-            {language} · {tone} · {targetAudience}
+            {provider === 'ollama' ? '⚡ Local Ollama (qwen2.5:7b)' : '☁️ Existing Providers'} · {language} · {tone}
           </span>
         </div>
         <div className="flex items-center gap-2 text-[#9DC4B0] font-serif">
@@ -89,6 +95,14 @@ const GenerationParams: React.FC<GenerationParamsProps> = ({
       {/* Content */}
       {expanded && (
         <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#0F261B] border-t border-[#1A402D] animate-in fade-in duration-150">
+          <div className="sm:col-span-2">
+            <Select
+              label="AI Inference Engine / Provider"
+              value={provider}
+              onValueChange={(v) => onChange('provider', v)}
+              options={PROVIDERS}
+            />
+          </div>
           <Select
             label="Target Language"
             value={language}

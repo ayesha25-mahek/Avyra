@@ -91,10 +91,10 @@ export const Header: React.FC<HeaderProps> = ({
           {user ? (
             <div className="flex items-center gap-3">
               {/* User Pill */}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#111A15] border border-[#1E2F26] text-xs">
+              <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111A15] border border-[#1E2F26] text-xs">
                 <span className="text-[#DCE6E0] truncate max-w-[160px] font-medium">{user.email}</span>
                 {badgeStyle && (
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}>
+                  <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}>
                     {ROLE_DISPLAY_NAMES[user.role]}
                   </span>
                 )}
@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={() => onSwitchView(activeView === 'dashboard' ? 'studio' : 'dashboard')}
-                className="px-3 py-1.5 rounded-lg border border-[#22332A] bg-[#111A15] text-[#DCE6E0] text-xs font-medium hover:bg-[#18261F] hover:text-white transition-colors"
+                className="px-3.5 py-1.5 rounded-full border border-[#23573E] bg-[#111A15] text-[#DCE6E0] text-xs font-medium hover:bg-[#18261F] hover:text-[#52B788] hover:border-[#52B788]/60 transition-all active:scale-[0.98]"
               >
                 {activeView === 'dashboard' ? 'Open Workspace' : isSuperAdmin ? 'Admin Center' : 'Dashboard'}
               </button>
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={onSignOut}
                 title="Sign Out"
-                className="p-2 rounded-lg border border-[#22332A] bg-[#111A15] text-[#9EB3A8] hover:text-red-400 hover:border-red-900/40 hover:bg-red-950/20 transition-colors"
+                className="p-2 rounded-full border border-[#22332A] bg-[#111A15] text-[#9EB3A8] hover:text-red-400 hover:border-red-900/40 hover:bg-red-950/20 transition-all active:scale-[0.98]"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -124,14 +124,14 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenAuth('signin')}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-[#9EB3A8] hover:text-white transition-colors"
+                className="px-4 py-1.5 rounded-full text-xs font-medium text-[#9EB3A8] hover:text-white transition-colors"
               >
                 Sign In
               </button>
               <button
                 type="button"
                 onClick={() => onOpenAuth('login')}
-                className="figma-btn-primary text-xs py-1.5 px-3.5"
+                className="steep-btn-filled text-xs py-1.5 px-4"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span>Log In</span>

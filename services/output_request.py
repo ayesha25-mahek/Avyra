@@ -8,7 +8,19 @@ class OutputRequest:
         "advisory",
         "executive_summary",
         "infographic",
-        "article"
+        "article",
+        "inspection_analysis",
+        # Industrial workflow outputs
+        "defect_report",
+        "technical_report",
+        "drawing_analysis",
+        "inspection_summary",
+        "extracted_text",
+        "document_summary",
+        "equipment_tags",
+        "data_summary",
+        "abnormal_values",
+        "analysis_workbook",
     ]
 
     def __init__(

@@ -36,7 +36,7 @@
 
   ::-webkit-scrollbar-thumb {
     background: #1C2822;
-    border-radius: 3px;
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -49,6 +49,58 @@
   }
 }
 
+/* Steep Style Tokens — Harmonized with Avyra's classy sage/emerald palette */
+:root {
+  --color-ink-black: #17191c;
+  --color-paper-white: #ffffff;
+  --color-mist-gray: #f2f2f3;
+  --color-fog-white: #fafafb;
+  --color-slate-gray: #777b86;
+  --color-ash-gray: #979799;
+  --color-smoke-gray: #a3a6af;
+  --color-blush-peach: #fbe1d1;
+  --color-sienna-brown: #5d2a1a;
+
+  /* Harmonized Light Classy Greens (inspired by Landing Page #4ADE80, #52B788, #74C69D) */
+  --color-sage-light: #52B788;
+  --color-sage-glow: #74C69D;
+  --color-emerald-accent: #22C55E;
+  --color-subtle-glow: rgba(74, 222, 128, 0.12);
+  --color-peach-accent: #fbe1d1;
+
+  /* Steep Border Radius & Shadows */
+  --radius-pill: 9999px;
+  --radius-card: 24px;
+  --radius-card-sm: 16px;
+  --shadow-steep-subtle: 0 0 0 1px rgba(74, 222, 128, 0.08), 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+  --shadow-steep-float: 0 0 0 1px rgba(82, 183, 136, 0.15), 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+}
+
+/* Steep Micro-Animations & Glow Effects */
+@keyframes steepPulseFade {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.88;
+    transform: scale(0.992);
+  }
+}
+
+@keyframes steepShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-steep-pulse {
+  animation: steepPulseFade 4s ease-in-out infinite;
+}
+
 @layer components {
   /* Figma Enterprise Typography */
   .font-brand {
@@ -57,33 +109,56 @@
     letter-spacing: -0.02em;
   }
 
-  /* Figma SaaS Buttons */
+  /* Steep Style Signature Pill Buttons — Classy Lighter Green & Dark Ink */
+  .steep-btn-filled {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-sans font-medium text-xs tracking-wide text-[#07130D] bg-[#52B788] hover:bg-[#74C69D] active:scale-[0.98] transition-all duration-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-[0_0_16px_rgba(82,183,136,0.35)];
+  }
+
+  .steep-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-sans font-medium text-xs tracking-wide text-[#B8D5C6] hover:text-white bg-transparent border border-[#23573E] hover:border-[#52B788] hover:bg-[#143324]/60 active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .steep-btn-subtle {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full font-sans text-xs text-[#9DC4B0] hover:text-[#52B788] bg-[#0E2419] hover:bg-[#143324] border border-[#1A402D] hover:border-[#52B788]/50 transition-all duration-150;
+  }
+
+  /* Steep Editorial Floating Artifact Card */
+  .steep-card-artifact {
+    @apply rounded-[24px] border border-[#1A402D]/80 bg-[#0C1F16]/90 p-6 backdrop-blur-md transition-all duration-300 hover:border-[#52B788]/40 hover:shadow-[0_8px_30px_rgba(82,183,136,0.08)];
+  }
+
+  /* Steep Warm Editorial Highlight Card (Peach puncturing monochrome/forest) */
+  .steep-card-peach {
+    @apply rounded-[24px] bg-[#fbe1d1] text-[#5d2a1a] p-6 transition-all duration-300;
+  }
+
+  /* Figma SaaS Buttons (Preserved for backwards compatibility) */
   .figma-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#2E7D56] text-white font-medium text-sm transition-colors duration-150 hover:bg-[#256847] active:bg-[#1E543A] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[#52B788] text-[#07130D] font-semibold text-sm transition-all duration-150 hover:bg-[#74C69D] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm;
   }
 
   .figma-btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#22332A] bg-[#111A15] text-[#DCE6E0] font-medium text-sm transition-colors duration-150 hover:bg-[#18261F] hover:text-white hover:border-[#2D4338] active:bg-[#111A15] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-[#23573E] bg-[#111A15] text-[#DCE6E0] font-medium text-sm transition-all duration-150 hover:bg-[#18261F] hover:text-white hover:border-[#52B788] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .figma-btn-light {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#1B4D36] text-white font-medium text-sm transition-colors duration-150 hover:bg-[#246346] active:bg-[#143B29] shadow-sm;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[#1B4D36] text-white font-medium text-sm transition-all duration-150 hover:bg-[#246346] active:bg-[#143B29] shadow-sm;
   }
 
   .figma-btn-outline-light {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#D5E0DA] bg-white text-[#1E2D24] font-medium text-sm transition-colors duration-150 hover:bg-[#F0F5F2] hover:border-[#B8CCC1];
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-[#D5E0DA] bg-white text-[#1E2D24] font-medium text-sm transition-all duration-150 hover:bg-[#F0F5F2] hover:border-[#B8CCC1];
   }
 
   /* Figma SaaS Card Styles */
   .figma-card-dark {
-    @apply rounded-xl border border-[#1A2820] bg-[#0E1712] p-6 transition-colors duration-150;
+    @apply rounded-[20px] border border-[#1A2820] bg-[#0E1712] p-6 transition-colors duration-150;
   }
 
   .figma-card-green {
-    @apply rounded-xl border border-[#244A37] bg-[#142E22] p-6 transition-colors duration-150;
+    @apply rounded-[20px] border border-[#244A37] bg-[#142E22] p-6 transition-colors duration-150;
   }
 
   .figma-card-light {
-    @apply rounded-xl border border-[#E1E8E4] bg-white p-6 transition-colors duration-150;
+    @apply rounded-[20px] border border-[#E1E8E4] bg-white p-6 transition-colors duration-150;
   }
 }

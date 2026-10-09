@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   X, Download, Copy, CheckCheck, Edit3, Loader2, Video,
   Linkedin, Twitter, Presentation, FileText, BarChart2,
-  Layout, PenTool, AlertCircle, History, Send, Eye
+  Layout, PenTool, AlertCircle, History, Send, Eye, ClipboardCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,7 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   BarChart2,
   Layout,
   PenTool,
+  ClipboardCheck,
 };
 
 interface OutputModalProps {

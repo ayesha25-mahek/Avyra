@@ -164,6 +164,50 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               />
             </div>
             <div className="mt-2 text-xs"><a href="/reset-password" className="text-gray-400 hover:text-[#00E599]">Forgot password?</a></div>
+
+            {/* 1-Click Role Login Shortcuts for Demo/Evaluation */}
+            <div className="pt-2">
+              <span className="text-[10px] text-[#74C69D] font-mono uppercase block mb-1.5 font-bold">
+                1-Click Industrial Role Login:
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px] font-mono">
+                <button
+                  type="button"
+                  onClick={() => { setEmail('admin@avyara.internal'); setPassword('adminpass'); }}
+                  className="px-2 py-1 rounded bg-[#143324] hover:bg-[#1E4D36] text-[#00E599] border border-[#23573E] truncate text-left"
+                >
+                  Admin (All)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('engineer@avyara.internal'); setPassword('engineerpass'); }}
+                  className="px-2 py-1 rounded bg-[#0F293D] hover:bg-[#163D5C] text-[#38BDF8] border border-[#1E4E6D] truncate text-left"
+                >
+                  Plant Engineer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('inspector@avyara.internal'); setPassword('inspectorpass'); }}
+                  className="px-2 py-1 rounded bg-[#33220A] hover:bg-[#4D330F] text-[#FBBF24] border border-[#61451B] truncate text-left"
+                >
+                  Field Inspector
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('analyst@avyara.internal'); setPassword('analystpass'); }}
+                  className="px-2 py-1 rounded bg-[#271533] hover:bg-[#3D2150] text-[#C084FC] border border-[#4D2863] truncate text-left"
+                >
+                  Data Analyst
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('manager@avyara.internal'); setPassword('managerpass'); }}
+                  className="px-2 py-1 rounded bg-[#163827] hover:bg-[#1E4D36] text-[#74C69D] border border-[#1E4D36] truncate text-left"
+                >
+                  Asset Manager
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Submit Button */}

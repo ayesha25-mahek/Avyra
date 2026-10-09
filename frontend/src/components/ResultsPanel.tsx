@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Copy, Download, CheckCheck, FileText, Video, Linkedin,
-  Twitter, Presentation, BarChart2, Layout, PenTool, AlertCircle, Eye
+  Twitter, Presentation, BarChart2, Layout, PenTool, AlertCircle, Eye, ClipboardCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,7 @@ import type { ResultEvent, OutputFormat } from '@/types';
 import { OUTPUT_FORMATS } from '@/components/OutputFormatSelector';
 
 const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
-  Video, Linkedin, Twitter, Presentation, FileText, BarChart2, Layout, PenTool,
+  Video, Linkedin, Twitter, Presentation, FileText, BarChart2, Layout, PenTool, ClipboardCheck,
 };
 
 interface ResultCardProps {

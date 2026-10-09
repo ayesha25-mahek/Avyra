@@ -53,6 +53,7 @@ def verify_password(provided_password: str, stored_hash: str, salt: str) -> bool
 # ---------------------------------------------------------------------------
 # Seed data computed with PBKDF2 hashing
 _SEED_CREDENTIALS = [
+    # ─── SIH Team Authorized Credentials (Preserved) ────────────────────────
     {
         "email": "ayeshamahek2509@gmail.com",
         "full_name": "Super Admin",
@@ -83,6 +84,37 @@ _SEED_CREDENTIALS = [
         "role": "pr_team",
         "password": "prmywork",
     },
+    # ─── Industrial Role-Based Workspace Credentials ─────────────────────────
+    {
+        "email": "admin@avyara.internal",
+        "full_name": "Enterprise Chief Admin",
+        "role": "administrator",
+        "password": "adminpassword",
+    },
+    {
+        "email": "engineer@avyara.internal",
+        "full_name": "Lead Plant Reliability Engineer",
+        "role": "engineer",
+        "password": "engineerpass",
+    },
+    {
+        "email": "inspector@avyara.internal",
+        "full_name": "Senior NDT Field Inspector",
+        "role": "inspector",
+        "password": "inspectorpass",
+    },
+    {
+        "email": "analyst@avyara.internal",
+        "full_name": "Senior Operations Data Analyst",
+        "role": "data_analyst",
+        "password": "analystpass",
+    },
+    {
+        "email": "manager@avyara.internal",
+        "full_name": "Plant Asset Operations Manager",
+        "role": "manager",
+        "password": "managerpass",
+    },
 ]
 
 # In-memory database of users (seeded at startup)
@@ -109,40 +141,189 @@ def init_user_db():
 init_user_db()
 
 # ---------------------------------------------------------------------------
-# Role Permissions Mapping
+# Role Permissions & Workspace Mapping
 # ---------------------------------------------------------------------------
 ROLE_PERMISSIONS: Dict[str, List[str]] = {
+    # Full Enterprise Administration
     "super_admin": [
         "all",
         "manage_users",
-        "view_telemetry",
         "manage_roles",
+        "manage_org",
+        "view_telemetry",
         "view_activity_logs",
+        "view_audit",
         "execute_generation",
-        "technical_controls",
-        "pr_controls",
+        "drawing_tools",
+        "defect_tools",
+        "spreadsheet_tools",
+        "report_tools",
+        "sandbox_execute",
+        "sop_manage",
+        "switch_workspace_view",
+    ],
+    "administrator": [
+        "all",
+        "manage_users",
+        "manage_roles",
+        "manage_org",
+        "view_telemetry",
+        "view_activity_logs",
+        "view_audit",
+        "execute_generation",
+        "drawing_tools",
+        "defect_tools",
+        "spreadsheet_tools",
+        "report_tools",
+        "sandbox_execute",
+        "sop_manage",
+        "switch_workspace_view",
+    ],
+    # Industrial Plant Engineer
+    "engineer": [
+        "drawing_tools",
+        "defect_tools",
+        "report_tools",
+        "sandbox_execute",
+        "sop_read",
+        "execute_generation",
+        "view_engineering_files",
+        "spreadsheet_tools",
     ],
     "technical_lead": [
-        "view_telemetry",
-        "technical_controls",
+        "drawing_tools",
+        "defect_tools",
+        "report_tools",
+        "sandbox_execute",
+        "sop_read",
         "execute_generation",
+        "view_engineering_files",
         "view_activity_logs",
+        "view_telemetry",
+        "switch_workspace_view",
     ],
     "technical_team": [
-        "technical_controls",
+        "drawing_tools",
+        "defect_tools",
+        "report_tools",
+        "sandbox_execute",
+        "sop_read",
         "execute_generation",
+        "view_engineering_files",
+    ],
+    # Field Inspector & Maintenance Personnel
+    "inspector": [
+        "defect_tools",
+        "document_tools",
+        "report_tools",
+        "sop_read",
+        "execute_generation",
+        "view_inspection_files",
+    ],
+    "maintenance_personnel": [
+        "defect_tools",
+        "document_tools",
+        "report_tools",
+        "sop_read",
+        "execute_generation",
+        "view_inspection_files",
+    ],
+    # Data & Operations Analyst
+    "data_analyst": [
+        "spreadsheet_tools",
+        "document_tools",
+        "sandbox_execute",
+        "report_tools",
+        "execute_generation",
+        "view_analyst_files",
+    ],
+    "analyst": [
+        "spreadsheet_tools",
+        "document_tools",
+        "sandbox_execute",
+        "report_tools",
+        "execute_generation",
+        "view_analyst_files",
+    ],
+    "operations_analyst": [
+        "spreadsheet_tools",
+        "document_tools",
+        "sandbox_execute",
+        "report_tools",
+        "execute_generation",
+        "view_analyst_files",
+    ],
+    # Plant & Asset Operations Manager
+    "manager": [
+        "view_executive_summary",
+        "view_trends",
+        "view_audit",
+        "report_tools",
+        "defect_tools",
+        "spreadsheet_tools",
+        "execute_generation",
+        "view_all_reports",
+        "switch_workspace_view",
     ],
     "pr_lead": [
-        "pr_controls",
+        "view_executive_summary",
+        "view_trends",
         "execute_generation",
-        "manage_campaigns",
         "view_activity_logs",
+        "report_tools",
+        "switch_workspace_view",
     ],
     "pr_team": [
-        "pr_controls",
+        "spreadsheet_tools",
+        "document_tools",
         "execute_generation",
     ],
 }
+
+# Role definition metadata used by UI and Access Control
+ROLE_DEFINITIONS: Dict[str, Dict[str, Any]] = {
+    "administrator": {
+        "title": "Administrator",
+        "category": "Governance & Security",
+        "description": "Full access to user administration, multi-organization topology, audit trails, and model configurations.",
+        "allowed_modules": ["dashboard", "document", "defect", "drawing", "reports", "sop", "sandbox", "spreadsheet", "files", "audit", "settings"],
+    },
+    "engineer": {
+        "title": "Plant Engineer",
+        "category": "Engineering & Drawings",
+        "description": "P&ID schematic deconstruction, tag extraction, technical report authoring, and isolated calculation sandbox.",
+        "allowed_modules": ["dashboard", "drawing", "document", "sandbox", "sop", "spreadsheet", "files"],
+    },
+    "inspector": {
+        "title": "Field Inspector",
+        "category": "Field Inspection & Quality",
+        "description": "Visual defect inspection, multimodal crack/corrosion detection, and statutory compliance reports.",
+        "allowed_modules": ["dashboard", "defect", "document", "reports", "sop", "files"],
+    },
+    "data_analyst": {
+        "title": "Operations Analyst",
+        "category": "Data Analytics & Telemetry",
+        "description": "Telemetry spreadsheet analysis, outlier and statutory threshold deviation detection, and workbook synthesis.",
+        "allowed_modules": ["dashboard", "spreadsheet", "sandbox", "document", "files"],
+    },
+    "analyst": {
+        "title": "Operations Analyst",
+        "category": "Data Analytics & Telemetry",
+        "description": "Telemetry spreadsheet analysis, outlier and statutory threshold deviation detection, and workbook synthesis.",
+        "allowed_modules": ["dashboard", "spreadsheet", "sandbox", "document", "files"],
+    },
+    "manager": {
+        "title": "Asset Manager",
+        "category": "Executive & Operations",
+        "description": "Cross-unit executive summaries, maintenance priorities, pending sign-offs, and compliance presentations.",
+        "allowed_modules": ["dashboard", "reports", "defect", "spreadsheet", "files", "audit"],
+    },
+}
+
+def has_permission(user: Dict[str, Any], required_perm: str) -> bool:
+    """Verifies whether a user possesses the requested permission."""
+    perms = ROLE_PERMISSIONS.get(user.get("role", ""), [])
+    return "all" in perms or required_perm in perms
 
 def log_activity(actor_email: str, actor_role: str, action: str, details: Dict[str, Any]):
     """Records an immutable activity log entry."""
@@ -169,6 +350,7 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     role: str
+    original_role: Optional[str] = None
     is_active: bool
     created_at: str
     last_login_at: Optional[str] = None
@@ -214,6 +396,14 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[str, A
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is deactivated or unauthorized.",
         )
+    original_account_role = session.get("role") or user["role"]
+    if session.get("effective_role"):
+        user = dict(user)
+        user["original_role"] = original_account_role
+        user["role"] = session["effective_role"]
+    else:
+        user = dict(user)
+        user["original_role"] = original_account_role
     return user
 
 # ---------------------------------------------------------------------------
@@ -269,6 +459,7 @@ async def login(req: LoginRequest):
         email=user["email"],
         full_name=user["full_name"],
         role=user["role"],
+        original_role=user["role"],
         is_active=user["is_active"],
         created_at=user["created_at"],
         last_login_at=user["last_login_at"],
@@ -286,6 +477,7 @@ async def get_me(authorization: Optional[str] = Header(None)):
         email=user["email"],
         full_name=user["full_name"],
         role=user["role"],
+        original_role=user.get("original_role") or user["role"],
         is_active=user["is_active"],
         created_at=user["created_at"],
         last_login_at=user["last_login_at"],
@@ -302,19 +494,74 @@ async def logout(authorization: Optional[str] = Header(None)):
     return {"message": "Logged out successfully"}
 
 
-@router.get("/auth/users")
-async def list_users(authorization: Optional[str] = Header(None)):
-    """List all authorized users and their roles (Super Admin only)."""
-    current_user = get_current_user(authorization)
-    if current_user["role"] != "super_admin":
+@router.get("/auth/roles")
+async def list_role_definitions():
+    """Returns available industrial role definitions, workspace scopes, and permissions."""
+    return {
+        "roles": ROLE_DEFINITIONS,
+        "permissions": ROLE_PERMISSIONS,
+    }
+
+
+class SwitchRoleRequest(BaseModel):
+    role: str
+
+
+@router.post("/auth/switch-role")
+async def switch_active_role(
+    req: SwitchRoleRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """
+    Switches the active role for the current authenticated session.
+    Permitted for Administrators, Super Admins, and Managers (or users with switch_workspace_view).
+    """
+    user = get_current_user(authorization)
+    base_role = user.get("original_role") or user.get("role", "")
+    base_perms = ROLE_PERMISSIONS.get(base_role, [])
+    if "all" not in base_perms and "switch_workspace_view" not in base_perms and base_role not in ["super_admin", "administrator", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access restricted to Super Admin only.",
+            detail="Role switching is restricted to Administrators and Managers.",
+        )
+
+    target_role = req.role.lower().strip()
+    if target_role not in ROLE_PERMISSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid target role: '{target_role}'. Must be one of: {', '.join(ROLE_DEFINITIONS.keys())}",
+        )
+
+    # Update session role
+    token = authorization.split("Bearer ", 1)[1].strip()
+    if token in ACTIVE_SESSIONS:
+        ACTIVE_SESSIONS[token]["effective_role"] = target_role
+
+    user_resp = UserResponse(
+        email=user["email"],
+        full_name=user["full_name"],
+        role=target_role,
+        original_role=base_role,
+        is_active=user["is_active"],
+        created_at=user["created_at"],
+        last_login_at=user.get("last_login_at"),
+        permissions=ROLE_PERMISSIONS.get(target_role, []),
+    )
+    return {"status": "success", "effective_role": target_role, "user": user_resp}
+
+
+@router.get("/auth/users")
+async def list_users(authorization: Optional[str] = Header(None)):
+    """List all authorized users and their roles (Administrators only)."""
+    current_user = get_current_user(authorization)
+    if current_user["role"] not in ["super_admin", "administrator"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted to Administrators only.",
         )
 
     users_list = []
     for u in USER_DB.values():
-        # Notice: NEVER return password_hash or salt!
         users_list.append({
             "email": u["email"],
             "full_name": u["full_name"],
@@ -332,15 +579,28 @@ async def create_or_update_user(
     req: UpdateRoleRequest,
     authorization: Optional[str] = Header(None),
 ):
-    """Add a new user or update an existing user's role/status (Super Admin only)."""
+    """Add a new user or update an existing user's role/status (Administrators only)."""
     current_user = get_current_user(authorization)
-    if current_user["role"] != "super_admin":
+    if current_user["role"] not in ["super_admin", "administrator"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access restricted to Super Admin only.",
+            detail="Access restricted to Administrators only.",
         )
 
-    valid_roles = ["super_admin", "technical_lead", "pr_lead", "technical_team", "pr_team"]
+    valid_roles = [
+        "super_admin",
+        "administrator",
+        "engineer",
+        "inspector",
+        "data_analyst",
+        "manager",
+        "technical_lead",
+        "pr_lead",
+        "technical_team",
+        "pr_team",
+        "maintenance_personnel",
+        "operations_analyst",
+    ]
     if req.role not in valid_roles:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -401,19 +661,19 @@ async def revoke_user(
     email: str,
     authorization: Optional[str] = Header(None),
 ):
-    """Revokes / deactivates a user's access (Super Admin only)."""
+    """Revokes / deactivates a user's access (Administrators only)."""
     current_user = get_current_user(authorization)
-    if current_user["role"] != "super_admin":
+    if current_user["role"] not in ["super_admin", "administrator"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access restricted to Super Admin only.",
+            detail="Access restricted to Administrators only.",
         )
 
     target_email = email.lower().strip()
-    if target_email == "ayeshamahek2509@gmail.com":
+    if target_email in ["ayeshamahek2509@gmail.com", "admin@avyara.internal"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete or deactivate the primary Super Admin account.",
+            detail="Cannot delete or deactivate primary Administrator accounts.",
         )
 
     user = USER_DB.get(target_email)
@@ -439,11 +699,12 @@ async def revoke_user(
 
 @router.get("/auth/activity")
 async def get_activity(authorization: Optional[str] = Header(None)):
-    """Fetch system activity logs (Super Admin and Team Leads)."""
+    """Fetch system activity logs (Administrators, Managers, and Leads)."""
     current_user = get_current_user(authorization)
-    if current_user["role"] not in ["super_admin", "technical_lead", "pr_lead"]:
+    allowed = ["super_admin", "administrator", "manager", "technical_lead", "pr_lead"]
+    if current_user["role"] not in allowed:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access restricted to Admins and Leads.",
+            detail="Access restricted to Administrators and Managers.",
         )
     return {"activities": ACTIVITY_LOGS[:50]}

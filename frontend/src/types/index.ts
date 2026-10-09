@@ -6,7 +6,18 @@ export type OutputFormat =
   | 'advisory'
   | 'executive_summary'
   | 'infographic'
-  | 'article';
+  | 'article'
+  | 'inspection_analysis'
+  | 'defect_report'
+  | 'technical_report'
+  | 'drawing_analysis'
+  | 'inspection_summary'
+  | 'extracted_text'
+  | 'document_summary'
+  | 'equipment_tags'
+  | 'data_summary'
+  | 'abnormal_values'
+  | 'analysis_workbook';
 
 export interface OutputFormatMeta {
   id: OutputFormat;
@@ -25,6 +36,20 @@ export interface GenerationParams {
   tone: string;
   target_audience: string;
   detail_level: string;
+  provider?: string;
+}
+
+export interface RoutingMetadata {
+  task_type: string;
+  selected_model: string;
+  provider: string;
+  local: boolean;
+  reason: string;
+  fallback_used?: boolean;
+  fallback?: string | null;
+  vision_model?: string | null;
+  external_calls: number;
+  vram_mb?: number;
 }
 
 export interface ProgressEvent {
@@ -32,6 +57,7 @@ export interface ProgressEvent {
   message: string;
   percent: number;
   current?: string;
+  routing?: RoutingMetadata;
 }
 
 export interface ResultEvent {
@@ -40,6 +66,8 @@ export interface ResultEvent {
   content: string;
   download_url?: string;
   filename?: string;
+  svg_content?: string;
+  routing?: RoutingMetadata;
 }
 
 export interface GenerationState {
@@ -48,3 +76,4 @@ export interface GenerationState {
   results: Partial<Record<OutputFormat, ResultEvent>>;
   error: string | null;
 }
+

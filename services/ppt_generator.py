@@ -16,6 +16,16 @@ class PPTGenerator:
             exist_ok=True
         )
 
+    def create_presentation(
+        self,
+        slide_plan,
+        filename=None
+    ):
+        if not filename:
+            import uuid
+            filename = f"presentation_{uuid.uuid4().hex[:8]}.pptx"
+        return self.generate(slide_plan, filename)
+
     def generate(
         self,
         slide_plan,

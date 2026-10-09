@@ -8,14 +8,21 @@ class AdvisoryGenerator:
 
     def generate(self, content_model, output_request):
 
+        raw_source = content_model.get("raw_text") or content_model.get("summary") or ""
+        entities = content_model.get("entities") or []
+        stats = content_model.get("statistics") or []
+
         prompt = f"""
-You are an expert advisory document writer for BizzoraAI.
+You are an expert advisory document writer for Avyara Enterprise Workbench.
 
-Create a structured advisory document using ONLY the information
-in the content model below.
+Create a structured advisory document using ONLY the information in the source material below.
 
-CONTENT MODEL:
-{content_model}
+SOURCE EVIDENCE CONTENT:
+{raw_source[:8000]}
+
+STRUCTURED EXTRACTED ENTITIES & STATS:
+- Entities / Equipment: {entities}
+- Numerical Parameters: {stats}
 
 DOCUMENT STRUCTURE:
 1. ADVISORY TITLE

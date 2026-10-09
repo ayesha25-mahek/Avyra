@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Zap, FileSearch, CheckCircle2, Sparkles, Loader2, Activity } from 'lucide-react';
+import { Cpu, Zap, FileSearch, CheckCircle2, Sparkles, Loader2, Activity, Server } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import type { ProgressEvent, ResultEvent, OutputFormat } from '@/types';
@@ -7,6 +7,7 @@ import { OUTPUT_FORMATS } from '@/components/OutputFormatSelector';
 
 const STAGE_ICONS: Record<string, React.FC<{ className?: string }>> = {
   reading: FileSearch,
+  routing: Server,
   analyzing: Cpu,
   preparing: Sparkles,
   generating: Zap,
@@ -61,6 +62,48 @@ const ProgressPanel: React.FC<ProgressPanelProps> = ({ progress, completedResult
           <span className="text-white font-bold">{percent}% COMPLETED</span>
         </div>
       </div>
+
+      {/* Autonomous Local Model Router Telemetry Card */}
+      {progress?.routing && (
+        <div className="rounded-lg border border-[#23573E] bg-[#0A1A12] p-3 text-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono text-[#74C69D] uppercase tracking-wider flex items-center gap-1.5">
+              <Server className="w-3.5 h-3.5 text-[#74C69D]" /> Autonomous Model Router
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#163827] text-[#74C69D] border border-[#265E43] font-bold">
+              {progress.routing.local ? '100% SOVEREIGN / LOCAL' : 'CLOUD CASCADE'}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-[#163827] text-[11px] font-mono">
+            <div>
+              <span className="text-[#688A78] block text-[9px] uppercase">Task</span>
+              <span className="text-white font-semibold">
+                {progress.routing.task_type.replace(/_/g, ' ').toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <span className="text-[#688A78] block text-[9px] uppercase">Selected Model</span>
+              <span className="text-[#74C69D] font-bold">{progress.routing.selected_model}</span>
+            </div>
+            <div>
+              <span className="text-[#688A78] block text-[9px] uppercase">Provider</span>
+              <span className="text-white">{progress.routing.provider.toUpperCase()}</span>
+            </div>
+            <div>
+              <span className="text-[#688A78] block text-[9px] uppercase">External Calls</span>
+              <span className="text-white font-bold">{progress.routing.external_calls}</span>
+            </div>
+          </div>
+          <p className="text-[10px] font-serif text-[#9DC4B0] italic pt-0.5">
+            ↳ Reason: {progress.routing.reason}
+            {progress.routing.fallback_used && progress.routing.fallback && (
+              <span className="text-[#74C69D] ml-1.5 font-mono not-italic font-bold">
+                [{progress.routing.fallback.toUpperCase()}]
+              </span>
+            )}
+          </p>
+        </div>
+      )}
 
       {/* Neural Pipeline Output Stage Status List */}
       {selectedOutputs.length > 0 && (
